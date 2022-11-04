@@ -1,0 +1,25 @@
+version: '3'
+services:
+  rails:
+    build:
+      context: ./
+      args:
+        - RUBY_VERSION=2.7.0
+        - ROOT_PATH=rails_app/rails_6.0
+    links:
+      - my_api_server
+    volumes:
+      - ./:/opt/myapp
+    environment:
+      - MY_API_ENDPOINT=http://my_api_server:3000
+  my_api_server:
+    build:
+      context: ./
+      args:
+        - RUBY_VERSION=2.7.0
+        - ROOT_PATH=my_api
+    volumes:
+      - ./:/opt/myapp
+    ports:
+      - 65080:3000
+    command: /bin/sh -c "bundle exec jets server --host '0.0.0.0' --port '3000'"
