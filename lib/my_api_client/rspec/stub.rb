@@ -29,6 +29,7 @@ module MyApiClient
     #       raise: MyApiClient::ClientError,
     #       response: { errors: [{ code: 10 }] },          # You can stub response and status code
     #       status_code: 429,                              # with an arbitrary error.
+    #       headers: { x-request-id: '123' },
     #     }
     #   )
     #   response = ExampleApiClient.new.get_user(id: 123)
@@ -61,6 +62,7 @@ module MyApiClient
     #       raise: MyApiClient::ClientError,
     #       response: { errors: [{ code: 10 }] },          # You can stub response and status code
     #       status_code: 403,                              # with exception.
+    #       headers: { x-request-id: '123' },
     #     }
     #   )
     #   response = api_client.get_user(id: 123)
@@ -87,7 +89,7 @@ module MyApiClient
         stub_as_resource(options.call(*request))
       when Hash
         if options[:raise]
-          raise process_raise_option(options[:raise], options[:response], options[:status_code])
+          raise process_raise_option(options[:raise], options[:response], options[:status_code], options[:headers]) # rubocop:disable Layout/LineLength
         elsif options[:response]
           stub_as_resource(options[:response])
         elsif options[:pageable].is_a?(Enumerable)
@@ -118,12 +120,14 @@ module MyApiClient
     # @param exception [Class, MyApiClient::Error] Processing target.
     # @param response [Hash] describe_response_here
     # @param status_code [Integer] describe_status_code_here
+    # @param headers [Hash] describe_headers_here
     # @return [MyApiClient::Error] Processed exception.
     # @raise [RuntimeError] Unsupported error class was set.
-    def process_raise_option(exception, response, status_code)
+    def process_raise_option(exception, response, status_code, headers)
       case exception
       when Class
-        params = MyApiClient::Params::Params.new(nil, stub_as_response(response, status_code))
+        stubbed_response = stub_as_response(response, status_code, headers)
+        params = MyApiClient::Params::Params.new(nil, stubbed_response)
         if exception == MyApiClient::NetworkError
           exception.new(params, Net::OpenTimeout.new)
         else
@@ -138,11 +142,11 @@ module MyApiClient
       end
     end
 
-    def stub_as_response(params, status_code)
+    def stub_as_response(params, status_code, headers)
       instance_double(
         Sawyer::Response,
         status: status_code.presence || 400,
-        headers: {},
+        headers: headers || {},
         data: stub_as_resource(params),
         body: params.to_json,
         timing: 0.123

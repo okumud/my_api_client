@@ -153,12 +153,17 @@ RSpec.describe MyApiClient::Stub do
       end
     end
 
-    context 'when use `raise`, `response` and `status_code` options' do
+    context 'when use `raise`, `response`, `status_code` and `headers` options' do
       shared_examples 'a stub to raise an error' do |error|
         let(:api_client) do
           stub_api_client(
             example_api_client,
-            request: { raise: error, response: { message: 'error 1' }, status_code: 404 },
+            request: {
+              raise: error,
+              response: { message: 'error 1' },
+              status_code: 404,
+              headers: { 'x-request-id': '123' },
+            },
             request_all: { raise: error, response: { message: 'error 2' } }
           )
         end
@@ -189,13 +194,25 @@ RSpec.describe MyApiClient::Stub do
           expect(status_code).to eq(400)
         end
 
+        it 'returns stub headers set in the `headers` option' do
+          api_client.request(user_id: 1)
+        rescue error => e
+          expect(e.params.response.headers).to eq('x-request-id': '123')
+        end
+
+        it 'returns empty headers if you omit the `headers` option' do
+          api_client.request_all
+        rescue error => e
+          expect(e.params.response.headers).to be_empty
+        end
+
         it 'returns stub metadata set in the options' do
           api_client.request(user_id: 1)
         rescue error => e
           expect(e.params.metadata).to eq(
             duration: 0.123,
             response_body: { message: 'error 1' },
-            response_headers: {},
+            response_headers: { 'x-request-id': '123' },
             response_status: 404
           )
         end
