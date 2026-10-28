@@ -443,6 +443,18 @@ On failure, it logs:
 API request `GET https://example.com/v1/users`: "Failure (Net::OpenTimeout)"
 ```
 
+You can customize the log message format with `self.log_formatter`.
+It accepts any object that responds to `call(method, uri, message)` and returns a formatted string:
+
+```ruby
+class ApplicationApiClient < MyApiClient::Base
+  self.logger = Rails.logger
+  self.log_formatter = lambda { |method, uri, message|
+    "[MyApiClient] #{method} #{uri} - #{message}"
+  }
+end
+```
+
 ## One request for one class
 
 In many cases, APIs on the same host share request headers and error structures, so defining multiple endpoints in one class is practical. If you prefer API-level separation, you can also use a "one class per API" design:

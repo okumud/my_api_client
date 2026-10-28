@@ -28,4 +28,19 @@ RSpec.describe MyApiClient::Base do
       expect(instance.logger).to eq(new_logger)
     end
   end
+
+  describe '.log_formatter' do
+    it 'defaults to MyApiClient::Request::Logger::DEFAULT_FORMATTER' do
+      expect(mock_class.log_formatter).to eq MyApiClient::Request::Logger::DEFAULT_FORMATTER
+    end
+  end
+
+  describe '#log_formatter=' do
+    let(:new_log_formatter) { ->(method, uri, message) { "#{method} #{uri} #{message}" } }
+
+    it 'overrides the log formatter' do
+      instance.log_formatter = new_log_formatter
+      expect(instance.log_formatter).to eq(new_log_formatter)
+    end
+  end
 end

@@ -9,6 +9,7 @@ module MyApiClient
     include MyApiClient::Request
 
     class_attribute :logger, default: ::Logger.new($stdout)
+    class_attribute :log_formatter, default: MyApiClient::Request::Logger::DEFAULT_FORMATTER
     class_attribute :error_handlers, instance_writer: false, default: []
 
     include MyApiClient::DefaultErrorHandlers

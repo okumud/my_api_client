@@ -11,10 +11,11 @@ RSpec.describe MyApiClient::Request do
       http_open_timeout 2.seconds
       http_read_timeout 3.seconds
 
-      attr_reader :logger
+      attr_reader :logger, :log_formatter
 
       def initialize
         @logger = Logger.new($stdout)
+        @log_formatter = MyApiClient::Request::Logger::DEFAULT_FORMATTER
       end
     end
   end
@@ -99,10 +100,11 @@ RSpec.describe MyApiClient::Request do
         .to have_received(:new).with(http_method, uri, headers, body)
     end
 
-    it 'builds a request logger instance with specified logger and arguments' do
+    it 'builds a request logger instance with specified logger, arguments and formatter' do
       request
       expect(MyApiClient::Request::Logger)
-        .to have_received(:new).with(instance.logger, http_method, uri)
+        .to have_received(:new)
+        .with(instance.logger, http_method, uri, formatter: instance.log_formatter)
     end
 
     it 'calls the request executor class with builded instances' do

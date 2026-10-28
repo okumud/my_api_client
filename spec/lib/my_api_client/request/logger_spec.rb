@@ -17,4 +17,16 @@ RSpec.describe MyApiClient::Request::Logger do
       end
     end
   end
+
+  context 'with a custom formatter' do
+    let(:instance) { described_class.new(logger, method, uri, formatter:) }
+    let(:formatter) { ->(method, uri, message) { "[MyApiClient] #{method} #{uri} - #{message}" } }
+
+    it 'outputs message formatted by the custom formatter' do
+      instance.info('message')
+      expect(logger)
+        .to have_received(:info)
+        .with('[MyApiClient] GET https://example.com/path/to/resouce - message')
+    end
+  end
 end

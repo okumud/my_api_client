@@ -8,15 +8,22 @@ module MyApiClient
 
       LOG_LEVEL = %i[debug info warn error fatal].freeze
 
+      DEFAULT_FORMATTER = lambda { |method, uri, message|
+        "API request `#{method} #{uri}`: \"#{message}\""
+      }
+
       # Description of #initialize
       #
       # @param logger [::Logger] describe_logger_here
       # @param method [String] HTTP method
       # @param uri [URI] Target URI
-      def initialize(logger, method, uri)
+      # @param formatter [#call]
+      #   Receives the HTTP method, target URI and message, and returns the formatted log message.
+      def initialize(logger, method, uri, formatter: DEFAULT_FORMATTER)
         @logger = logger
         @method = method.to_s.upcase
         @uri = uri
+        @formatter = formatter
       end
 
       LOG_LEVEL.each do |level|
@@ -29,8 +36,10 @@ module MyApiClient
 
       private
 
+      attr_reader :formatter
+
       def format(message)
-        "API request `#{method} #{uri}`: \"#{message}\""
+        formatter.call(method, uri, message)
       end
     end
   end
